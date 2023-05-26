@@ -6,11 +6,12 @@ import (
 	"os"
 
 	"github.com/conductorone/baton-sdk/pkg/cli"
-	"github.com/conductorone/baton-sdk/pkg/connector"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
 	"github.com/conductorone/baton-sdk/pkg/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
+
+	"github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}/pkg/connector"
 )
 
 var version = "dev"
