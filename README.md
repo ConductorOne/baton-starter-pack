@@ -1,4 +1,4 @@
-# baton-template
+# baton-starter-pack
 A simple template for quickly building your own Baton connector.
 
 ## How to use
