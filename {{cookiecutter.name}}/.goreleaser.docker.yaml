@@ -1,0 +1,54 @@
+project_name: {{ cookiecutter.name }}
+builds:
+  - binary: {{ cookiecutter.name }}
+    env:
+      - CGO_ENABLED=0
+    id: linux
+    main: ./cmd/{{ cookiecutter.name }}
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:{{ '{{ .Version }}' }}-amd64"
+      - "ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:latest-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{ '{{.Date}}' }}"
+      - "--label=org.opencontainers.image.title={{ cookiecutter.name }}"
+      - "--label=org.opencontainers.image.revision={{ '{{.FullCommit}}' }}"
+      - "--label=org.opencontainers.image.version={{ '{{.Version}}' }}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:{{ '{{ .Version }}' }}-arm64"
+      - "ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:latest-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{ '{{.Date}}' }}"
+      - "--label=org.opencontainers.image.title={{ cookiecutter.name }}"
+      - "--label=org.opencontainers.image.revision={{ '{{.FullCommit}}' }}"
+      - "--label=org.opencontainers.image.version={{ '{{.Version}}' }}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}"
+docker_manifests:
+  - name_template: ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:{{ '{{ .Version }}' }}
+    image_templates:
+      - ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:{{ '{{ .Version }}' }}-amd64
+      - ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:{{ '{{ .Version }}' }}-arm64
+  - name_template: ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:latest
+    image_templates:
+      - ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:latest-amd64
+      - ghcr.io/{{ cookiecutter.repo_owner }}/{{ cookiecutter.name }}:latest-arm64
+checksum:
+  disable: true
+release:
+  disable: true
+changelog:
+  skip: true
