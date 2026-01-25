@@ -11,7 +11,14 @@ endif
 .PHONY: build
 build:
 	go build -o ${OUTPUT_PATH} ./cmd/{{ cookiecutter.name }}
-	go build -o ${OUTPUT_PATH} ./cmd/{{ cookiecutter.name }}
+
+.PHONY: test
+test:
+	go test -v ./...
+
+.PHONY: lint
+lint:
+	golangci-lint run
 
 .PHONY: update-deps
 update-deps:
@@ -24,6 +31,8 @@ add-dep:
 	go mod tidy -v
 	go mod vendor
 
-.PHONY: lint
-lint:
-	golangci-lint run
+.PHONY: clean
+clean:
+	rm -rf dist/
+
+.DEFAULT_GOAL := build

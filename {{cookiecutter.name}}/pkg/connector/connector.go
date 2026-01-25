@@ -9,36 +9,52 @@ import (
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
 )
 
-type Connector struct{}
+// Connector implements the {{ cookiecutter.name }} connector.
+type Connector struct {
+	// TODO: Add API client or other state here.
+	// Example: client *Client
+}
 
-// ResourceSyncers returns a ResourceSyncer for each resource type that should be synced from the upstream service.
-func (d *Connector) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
+// ResourceSyncers returns a ResourceSyncer for each resource type.
+//
+// The three fundamental resource types are:
+// 1. Users - principals that can be granted access (TRAIT_USER)
+// 2. Groups - collections with "member" entitlement (TRAIT_GROUP)
+// 3. Roles - permissions with "assigned" entitlement (TRAIT_ROLE)
+func (c *Connector) ResourceSyncers(ctx context.Context) []connectorbuilder.ResourceSyncer {
 	return []connectorbuilder.ResourceSyncer{
-		newUserBuilder(),
+		newUserBuilder(c),
+		newGroupBuilder(c),
+		newRoleBuilder(c),
 	}
 }
 
-// Asset takes an input AssetRef and attempts to fetch it using the connector's authenticated http client
-// It streams a response, always starting with a metadata object, following by chunked payloads for the asset.
-func (d *Connector) Asset(ctx context.Context, asset *v2.AssetRef) (string, io.ReadCloser, error) {
+// Asset fetches an asset by reference. Most connectors return nil.
+func (c *Connector) Asset(ctx context.Context, asset *v2.AssetRef) (string, io.ReadCloser, error) {
 	return "", nil, nil
 }
 
-// Metadata returns metadata about the connector.
-func (d *Connector) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) {
+// Metadata returns connector metadata shown in the UI.
+func (c *Connector) Metadata(ctx context.Context) (*v2.ConnectorMetadata, error) {
 	return &v2.ConnectorMetadata{
-		DisplayName: "My Baton Connector",
-		Description: "The template implementation of a baton connector",
+		DisplayName: "{{ cookiecutter.name }}",
+		Description: "Connector for {{ cookiecutter.name }}",
 	}, nil
 }
 
-// Validate is called to ensure that the connector is properly configured. It should exercise any API credentials
-// to be sure that they are valid.
-func (d *Connector) Validate(ctx context.Context) (annotations.Annotations, error) {
+// Validate tests the connection. Called before every sync.
+func (c *Connector) Validate(ctx context.Context) (annotations.Annotations, error) {
+	// TODO: Test API connection
+	// Example:
+	//   _, err := c.client.GetCurrentUser(ctx)
+	//   if err != nil {
+	//       return nil, fmt.Errorf("{{ cookiecutter.name }}: validation failed: %w", err)
+	//   }
 	return nil, nil
 }
 
-// New returns a new instance of the connector.
+// New creates a new connector instance.
 func New(ctx context.Context) (*Connector, error) {
+	// TODO: Initialize API client
 	return &Connector{}, nil
 }
