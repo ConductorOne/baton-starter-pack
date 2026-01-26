@@ -1,23 +1,52 @@
 name: ci
-
 on:
   pull_request:
     types: [opened, reopened, synchronize]
   push:
     branches:
       - main
-
 jobs:
-  build:
+  verify:
+    uses: ConductorOne/github-workflows/.github/workflows/verify.yaml@v4
+    with:
+      ref: ${{ github.ref_name }}
+
+  test:
     runs-on: ubuntu-latest
+    # Define any services needed for the test suite (or delete this section)
+    # services:
+    #   postgres:
+    #     image: postgres:16
+    #     ports:
+    #       - "5432:5432"
+    #     env:
+    #       POSTGRES_PASSWORD: secretpassword
+    env:
+      BATON_LOG_LEVEL: debug
+      # Add any environment variables needed to run {{ cookiecutter.name }}
+      # BATON_BASE_URL: 'http://localhost:8080'
+      # BATON_ACCESS_TOKEN: 'secret_token'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
-      - name: Build connector
-        run: go build -o {{ cookiecutter.name }} ./cmd/{{ cookiecutter.name }}
-      - name: Verify binary runs
-        run: ./{{ cookiecutter.name }} --help
+          go-version-file: go.mod
+      # Install any dependencies here (or delete this)
+      # - name: Install postgres client
+      #   run: sudo apt install postgresql-client
+      # Run any fixture setup here (or delete this)
+      # - name: Import sql into postgres
+      #   run: psql -h localhost --user postgres -f environment.sql
+      #   env:
+      #     PGPASSWORD: secretpassword
+      - name: Build {{ cookiecutter.name }}
+        run: go build ./cmd/{{ cookiecutter.name }}
+      - name: Test syncing
+        uses: ConductorOne/github-workflows/actions/sync-test@v4
+        with:
+          connector: ./{{ cookiecutter.name }}
+          baton-entitlement: "entitlement:group:1234:member"
+          baton-principal: "user:9876"
+          baton-principal-type: "user"

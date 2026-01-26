@@ -32,9 +32,9 @@ var (
 	FieldRelationships = []field.SchemaFieldRelationship{}
 )
 
-//go:generate go run ./gen
+//go:generate go run -tags=generate ./gen
 var Config = field.NewConfiguration(
 	ConfigurationFields,
 	field.WithConstraints(FieldRelationships...),
-	field.WithConnectorDisplayName("{{ cookiecutter.name }}"),
+	field.WithConnectorDisplayName("{{ cookiecutter.display_name }}"),
 )

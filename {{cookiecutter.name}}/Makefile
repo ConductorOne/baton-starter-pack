@@ -22,7 +22,7 @@ build: $(GENERATED_CONF)
 
 $(GENERATED_CONF): pkg/config/config.go go.mod
 	@echo "Generating $(GENERATED_CONF)..."
-	go generate ./pkg/config
+	go generate -tags=generate ./pkg/config
 
 .PHONY: generate
 generate: $(GENERATED_CONF)
@@ -33,7 +33,7 @@ test:
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	golangci-lint run --timeout=3m
 
 .PHONY: update-deps
 update-deps:
@@ -43,6 +43,12 @@ update-deps:
 
 .PHONY: add-dep
 add-dep:
+	go mod tidy -v
+	go mod vendor
+
+.PHONY: update-baton-sdk-deps
+update-baton-sdk-deps:
+	go get -u github.com/conductorone/baton-sdk
 	go mod tidy -v
 	go mod vendor
 
