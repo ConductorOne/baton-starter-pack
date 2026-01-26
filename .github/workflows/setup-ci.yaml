@@ -3,12 +3,16 @@ on:
   push:
     paths:
       - cookiecutter.json
+permissions:
+  contents: write
+  actions: write
 jobs:
   setup:
     name: Reinitialize repository
     runs-on: ubuntu-latest
     env:
       REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
     steps:
       - name: Do not run scaffolding on template repository
         shell: bash
@@ -25,6 +29,11 @@ jobs:
             https://api.github.com/repos/$GITHUB_REPOSITORY \
             | jq --exit-status '.is_template == false';
 
+      - id: string
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.repository }}
+
       - uses: actions/checkout@v4
         with:
           # Committing workflow files using the regular GITHUB_TOKEN will fail with
@@ -37,10 +46,31 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: pip install cookiecutter
+
+      - name: Derive config_name and display_name from name
+        id: name_parts
+        run: |
+          raw_name=$(jq -r '.name' cookiecutter.json)
+
+          # Strip "baton-" prefix if present
+          name_no_prefix="${raw_name#baton-}"
+
+          # PascalCase for config_name
+          config_name=$(echo "$name_no_prefix" | sed -E 's/(^|-)([a-z])/\U\2/g')
+
+          # Title Case for display_name
+          display_name=$(echo "$name_no_prefix" | sed 's/[-_]/ /g' | sed 's/\b\w/\U&/g')
+
+          # Overwrite cookiecutter.json with new fields
+          jq --arg config_name "$config_name" \
+            --arg display_name "$display_name" \
+            --arg name_no_prefix "$name_no_prefix" \
+            '.config_name = $config_name | .display_name = $display_name | .name_no_prefix = $name_no_prefix' \
+            cookiecutter.json > tmp.json && mv tmp.json cookiecutter.json
 
       - name: Scaffolding repository
         # cookiecutter is command-line utility to create projects from templates
@@ -73,13 +103,27 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: "1.23"
 
-      - name: Vendor dependencies
+      - name: go mod init
         shell: bash
         run: |
+          go mod init "github.com/${{ steps.string.outputs.lowercase }}" && \
+          go get github.com/conductorone/baton-sdk@latest && \
           go mod tidy && \
           go mod vendor
+
+      - name: Generate config schema
+        run: go generate -tags=generate ./pkg/config
+
+      - name: gofmt
+        run: gofmt -w .
+
+      - name: Get latest lint config
+        run: |
+          LATEST_TAG=$(curl -sSfL https://api.github.com/repos/ConductorOne/github-workflows/releases/latest | jq -r '.tag_name')
+          curl -sSfL "https://raw.githubusercontent.com/ConductorOne/github-workflows/${LATEST_TAG}/.golangci.yml" -o .golangci.yml
+          echo "Successfully updated .golangci.yml from release ${LATEST_TAG}"
 
       - name: Reinitialize git repository
         shell: bash
