@@ -25,7 +25,7 @@ jobs:
             https://api.github.com/repos/$GITHUB_REPOSITORY \
             | jq --exit-status '.is_template == false';
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # Committing workflow files using the regular GITHUB_TOKEN will fail with
           # `Git Error: Refusing to allow a GitHub App to create or update workflow without workflows permission`.
@@ -35,7 +35,7 @@ jobs:
           # Checkout my blog post https://stefanbuck.com/blog for alternative options
           token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
@@ -71,14 +71,13 @@ jobs:
           rm -rf ./cookiecutter-temp/
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.20.x
+          go-version: '1.23'
 
-      - name: go mod init
+      - name: Vendor dependencies
         shell: bash
         run: |
-          go mod init github.com/$GITHUB_REPOSITORY && \
           go mod tidy && \
           go mod vendor
 
