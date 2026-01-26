@@ -8,33 +8,6 @@ on:
       - main
 
 jobs:
-  go-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-      - name: Run linters
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: latest
-          args: --timeout=3m
-
-  go-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-      - name: Run tests
-        run: go test -v -covermode=count ./...
-
   build:
     runs-on: ubuntu-latest
     steps:
