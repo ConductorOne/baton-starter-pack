@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Build connector
+        run: go build -o {{ cookiecutter.name }} ./cmd/{{ cookiecutter.name }}
+      - name: Verify binary runs
+        run: ./{{ cookiecutter.name }} --help

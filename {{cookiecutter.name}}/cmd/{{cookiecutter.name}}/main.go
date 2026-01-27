@@ -1,3 +1,5 @@
+//go:build !generate
+
 package main
 
 import (
@@ -5,13 +7,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/conductorone/baton-sdk/pkg/cli"
+	cfg "github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}/pkg/config"
+	"github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}/pkg/connector"
+	"github.com/conductorone/baton-sdk/pkg/config"
 	"github.com/conductorone/baton-sdk/pkg/connectorbuilder"
+	"github.com/conductorone/baton-sdk/pkg/field"
 	"github.com/conductorone/baton-sdk/pkg/types"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
-
-	"github.com/{{ cookiecutter.repo_owner }}/{{ cookiecutter.repo_name }}/pkg/connector"
 )
 
 var version = "dev"
@@ -19,8 +22,12 @@ var version = "dev"
 func main() {
 	ctx := context.Background()
 
-	cfg := &config{}
-	cmd, err := cli.NewCmd(ctx, "{{ cookiecutter.name }}", cfg, validateConfig, getConnector)
+	_, cmd, err := config.DefineConfiguration(
+		ctx,
+		"{{ cookiecutter.name }}",
+		getConnector,
+		cfg.Config,
+	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
@@ -35,19 +42,24 @@ func main() {
 	}
 }
 
-func getConnector(ctx context.Context, cfg *config) (types.ConnectorServer, error) {
+func getConnector(ctx context.Context, cc *cfg.Connector) (types.ConnectorServer, error) {
 	l := ctxzap.Extract(ctx)
+
+	err := field.Validate(cfg.Config, cc)
+	if err != nil {
+		return nil, err
+	}
 
 	cb, err := connector.New(ctx)
 	if err != nil {
-		l.Error("error creating connector", zap.Error(err))
-		return nil, err
+		l.Error("{{ cookiecutter.name }}: error creating connector", zap.Error(err))
+		return nil, fmt.Errorf("{{ cookiecutter.name }}: failed to create connector: %w", err)
 	}
 
 	c, err := connectorbuilder.NewConnector(ctx, cb)
 	if err != nil {
-		l.Error("error creating connector", zap.Error(err))
-		return nil, err
+		l.Error("{{ cookiecutter.name }}: error wrapping connector", zap.Error(err))
+		return nil, fmt.Errorf("{{ cookiecutter.name }}: failed to initialize connector: %w", err)
 	}
 
 	return c, nil
