@@ -1,0 +1,5 @@
+dist/
+baton-devolutions
+*.exe
+.env
+*.c1z
